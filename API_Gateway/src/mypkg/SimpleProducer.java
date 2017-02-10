@@ -91,6 +91,6 @@ public class SimpleProducer {
 
 		}
 		System.out.println("Message sent successfully");
-		producer.close();
+		//producer.close();
 	}
 }

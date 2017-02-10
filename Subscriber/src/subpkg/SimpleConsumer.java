@@ -14,6 +14,9 @@ import java.util.Properties;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
+import org.apache.kafka.clients.producer.KafkaProducer;
+import org.apache.kafka.clients.producer.Producer;
+import org.apache.kafka.clients.producer.ProducerRecord;
 
 /**
  * @author juhi
@@ -81,10 +84,10 @@ public class SimpleConsumer {
 					response = getJavaJar("/home/juhi/IIITH/Sem4/IAS/workspace/Subscriber/AuthenticationService.jar",
 							"secpkg.Security", "runExternalCommand", cArg, args1);
 					System.out.println("res =" + response);
+					addToMsgQ(record.key(), response);
 					break;
 
 				case "FILE":
-					System.out.println("inside file");
 					// call file CRUD operations
 					cArg = new Class[2];
 					cArg[0] = String.class;
@@ -96,6 +99,7 @@ public class SimpleConsumer {
 					response = getJavaJar("/home/juhi/IIITH/Sem4/IAS/workspace/Subscriber/FileService.jar",
 							"filepkg.Crud", "getFileOper", cArg, args1);
 					System.out.println("res =" + response);
+
 					break;
 				case "LOGGING":
 					// call utility logging mechanism
@@ -129,5 +133,23 @@ public class SimpleConsumer {
 
 		return httpResponse;
 
+	}
+
+	public void addToMsgQ(String ID, String resp) throws Exception {
+
+		Properties props = new Properties();
+		props.put("bootstrap.servers", "localhost:9092");
+		props.put("acks", "all");
+		props.put("retries", 0);
+		props.put("batch.size", 16384);
+		props.put("linger.ms", 1);
+		props.put("buffer.memory", 33554432);
+		props.put("key.serializer", "org.apache.kafka.common.serialization.StringSerializer");
+		props.put("value.serializer", "org.apache.kafka.common.serialization.StringSerializer");
+		Producer<String, String> producer = new KafkaProducer<String, String>(props);
+		System.out.println("From response"+ID+resp);
+		producer.send(new ProducerRecord<String, String>("RESPONSE", ID, resp));
+		System.out.println("RESPONSE sent successfully!");
+		producer.close();
 	}
 }
